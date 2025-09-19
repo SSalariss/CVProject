@@ -8,14 +8,16 @@ from tkinter import Event
 from abc import ABC
 from abc import abstractmethod
 
+from typing import Optional
+
 import os
 
 
 class AdaptImageABC(ABC):
     _master: tk.Tk
-    _label: tk.Label
+    _canvas: tk.Canvas
 
-    def __init__(self, master: tk.Tk) -> None:
+    def __init__(self, master: tk.Tk, thickness: Optional[int] = 0) -> None:
         """
         Inizializza la classe Adapt
 
@@ -30,19 +32,22 @@ class AdaptImageABC(ABC):
         --------------
         master : `tk.Tk`
             Finestra master del widget.
+
+        thickness : int | None
+            Imposta lo spessore del bordo del widget.
         """
         self._master = master
 
-        self._label = tk.Label(self._master)
-        self._label.bind("<Configure>", self.on_configure)
-        self._label.pack(fill="both", expand=True)
+        self._canvas = tk.Canvas(self._master, highlightthickness=0)
+        self._canvas.bind("<Configure>", self.on_configure)
+        self._canvas.pack(fill="both", expand=True)
 
 
     @abstractmethod
     def resize(self, new_size: tuple[int, int]) -> PhotoImage: ...
 
     
-    def on_configure(self, event: Event):
+    def on_configure(self, event: Event) -> None:
         """
         Gestisce l'evento `<Configure>`
 
@@ -56,6 +61,10 @@ class AdaptImageABC(ABC):
         """
         new_size: tuple[int, int] = (event.width, event.height)
         self.resize(new_size)
+
+
+    def label(self):
+        return self._canvas
 
 
 
@@ -90,8 +99,7 @@ class BackgroundImage(AdaptImageABC):
         # La superclasse generica non
         # imposta alcuna immagine, quindi
         # tocca a questa classe settarla.
-        self._label.config(image=self._photo_image)
-
+        self.background_id = self._canvas.create_image(0, 0, image=self._photo_image, anchor="nw")
 
     def __init_images__(self, path: str) -> None:
         """
@@ -155,6 +163,27 @@ class BackgroundImage(AdaptImageABC):
 
         # Imposto la nuova _photo_image come nuova
         # immagine del widget
-        self._label.config(image=self._photo_image)
+        self._canvas.itemconfig(self.background_id, image=self._photo_image)
 
         
+
+
+class Main:
+
+    _main_window: tk.Tk
+
+    def __init__(self):
+        self._main_window = tk.Tk(className="Offside detector")
+        self._main_window.geometry("800x600")
+        self._main_window.configure()
+
+        background_canvas = BackgroundImage(self._main_window, "resources\\background.png").label()
+        background_canvas.create_text(0, 0,
+                                      text="Prova",
+                                      font=("Arial", 24),
+                                      )
+        
+
+
+    def start(self) -> None:
+        self._main_window.mainloop()
