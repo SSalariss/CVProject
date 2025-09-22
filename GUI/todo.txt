@@ -1,6 +1,0 @@
-1. Finire il menu principale
-2. Upload dell'immagine
-3. Schermata di caricamento
-4. Schermata finale con immagine risultato
-5. Pulsante "riprova"
-6. Suoni ed animazioni
