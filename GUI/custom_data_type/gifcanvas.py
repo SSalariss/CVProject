@@ -98,7 +98,6 @@ class GifCanvas(GifCanvasABC):
     
     # @overload from AdaptCanvas
     def __gif_resize__(self, ci: CanvasImage, size: tuple[int, int]):
-        print(f"GIF CANVAS RESIZE of {ci}")
         # Estraggo le dimensioni x ed y
         # del widget master.
         x, y = size

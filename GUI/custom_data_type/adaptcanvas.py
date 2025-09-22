@@ -225,7 +225,6 @@ class AdaptCanvas(AdaptCanvasABC):
         new_image : `Image`
             ritorna l'immagine ridimensionata presente nel widget.
         """
-        print(f"AdaptCanvas RESIZE of {ci}")
         # Prendo una copia dell'immagine e la ridimensiono
         # in base alla nuova dimensione `size` passata alla funzione.
         new_image = ci.image().resize(size, Resampling.LANCZOS)

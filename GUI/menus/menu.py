@@ -1,5 +1,6 @@
 import tkinter as tk
 from playsound import playsound
+import winsound
 
 from typing import Optional
 
@@ -87,4 +88,4 @@ class MainMenu():
 
 
     def __init_music__(self):
-        playsound("resources\\sounds\\menu\\music.wav", False)
+        winsound.PlaySound("resources\\sounds\\menu\\music.wav", winsound.SND_LOOP | winsound.SND_ASYNC)
