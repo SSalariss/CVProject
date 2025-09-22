@@ -1,4 +1,4 @@
-from strutture_dati import Main
+from controller import Controller
 
 
-Main().start()
+Controller().start()
