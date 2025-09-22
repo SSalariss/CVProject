@@ -13,6 +13,7 @@ class LoadingMenu:
     def __init__(self, master: tk.Widget):
         self._background = GifCanvas(master, self._BACKGROUND_PATH, self._GIF_PATH)
         self._background.pack(expand=True, fill="both")
+        
 
 
 

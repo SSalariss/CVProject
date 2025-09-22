@@ -11,10 +11,48 @@ from abc import ABC
 from abc import abstractmethod
 
 # typing
-from typing import Optional
+from typing import Optional, Callable, Self
 
 # os
 import os
+
+class CanvasImage():
+    
+    _path: str
+    _image: Image
+    _current_pi: PhotoImage
+    _id: int
+    _resize_func: Callable[[tuple[int, int]], Image]
+
+
+    def __init__(self, path: str, image: Image, current_pi: PhotoImage, id: int, resize_func: Callable[[Self, tuple[int, int]], None]):
+        self._path = path
+        self._image = image
+        self._current_pi = current_pi
+        self._id = id
+        self._resize_func = resize_func
+
+    def path(self):
+        return self._path
+
+    def image(self):
+        return self._image
+    
+    def current_pi(self):
+        return self._current_pi
+    
+    def id(self):
+        return self._id
+    
+    def set_current_pi(self, pi: PhotoImage):
+        self._current_pi = pi
+
+    def resize(self, size: tuple[int, int]) -> None:
+        self._resize_func(self, size)
+    
+    def __repr__(self):
+        return f"image: {self._path}, id: {self._id}"
+
 
 
 
@@ -33,13 +71,8 @@ class AdaptCanvasABC(tk.Canvas, ABC):
     # Widget attributes
     _master: tk.Widget
 
-    # AdaptCanvas attributes
-    _path: str
-    _image: Image
-    _photo_image: PhotoImage
-
-    # Canvas attributes
-    _background_id: int
+    # childs
+    _childs: list[CanvasImage]
 
     def __init__(self, master: tk.Widget, image_path: str, thickness: Optional[int] = 0) -> None:
         """
@@ -65,17 +98,15 @@ class AdaptCanvasABC(tk.Canvas, ABC):
         """
         super().__init__(master, highlightthickness=thickness)
 
-        # Inizializza Image e PhotoImage
-        self.__init_images__(image_path)
-
         # Configura la classe master in cui si trova
         self._master = master
+        self._childs = list()
 
         # Esegue il bind all'evento <Configure>
         self.bind("<Configure>", self.on_configure)
 
 
-    def __init_images__(self, path: str) -> None:
+    def __open_image__(self, path: str) -> Image:
         """
         Apre l'immagine indicata dal path
 
@@ -93,45 +124,16 @@ class AdaptCanvasABC(tk.Canvas, ABC):
             se il path non indica alcun file oppure se il file
             non ha un estensione valida.
         """
-
-        # Setto l'attributo path
-        self._path = path
-
         # Se il percorso non rappresenta un file
         # solleva un eccezione.
         if not os.path.isfile(path) :
             raise AttributeError(f"Il file {path} non e' valido.")
         
         # Genero l'Image tramite il path
-        self._image = ImageFactory.open(path)
-
-        # Genero la PhotoImage tramite l'Image precedente
-        self._photo_image = ImageTk.PhotoImage(image=self._image)
+        return ImageFactory.open(path)
     
-    def on_configure(self, event: Event) -> None:
-        """
-        Gestisce l'evento `<Configure>`
-
-        Quando la label `master` subisce un ridimensionamento
-        essa chiamera' questa funzione che, a sua volta, chiamera
-        la funzione `resize` passando la nuova dimensione della label master
-        come argomento.
-        Cio' significa che qualsiasi classe che estende `Adapt` deve implementare
-        una funzione `resize` che
-        gestisce il ridimensionamento del widget `self`
-        """
-        # Estra la nuova dimensione del widget master
-        new_size: tuple[int, int] = (event.width, event.height)
-        
-        # Esegue il ridimensionamento
-        self._resize(new_size)
-    
-
     @abstractmethod
-    def _resize(self, new_size: tuple[int, int]) -> None: ...
-
-    @abstractmethod
-    def _set_image(self, new_image: PhotoImage) -> None: ...
+    def on_configure(self, event: Event) -> None: ...
 
 
 class AdaptCanvas(AdaptCanvasABC):
@@ -145,7 +147,6 @@ class AdaptCanvas(AdaptCanvasABC):
     
     Se si vuole scrivere un proprio metodo `resize` allora
     bisogna implementare la classe `AdaptCanvasABC` e non questa.
-
     """
 
     def __init__(self, master: tk.Widget, image_path: str, thickness: Optional[int] = 0) -> None:
@@ -170,14 +171,44 @@ class AdaptCanvas(AdaptCanvasABC):
         # Inizializza la superclasse
         super().__init__(master, image_path, thickness)
 
-        # La superclasse generica non
-        # imposta alcuna immagine, quindi
-        # tocca a questa classe settarla.
-        self._background_id = self.create_image(0, 0, image=self._photo_image, anchor="nw")
+        # Apro l'immagine indicata dal path
+        image = self.__open_image__(image_path)
 
-    
-    # @override
-    def _resize(self, size: tuple[int, int]) -> None:
+        # Converto l'image in una PhotoImage
+        photo_image = ImageTk.PhotoImage(image)
+
+        # Ottengo l'id dell'immagine creata
+        id = self.create_image(0, 0, image=photo_image, anchor="nw")
+
+        # Creo un CanvasImage in cui salvo i dati del background
+        # appena creato
+        self._background = CanvasImage(image_path, image, photo_image, id, resize_func=self.__whole_screen_resize__)
+
+        # Salvo il background come figlio
+        self._childs.append(self._background)
+
+    # @overload
+    def on_configure(self, event):
+        """
+        Gestisce l'evento `<Configure>`
+
+        Quando la label `master` subisce un ridimensionamento
+        essa chiamera' questa funzione che, a sua volta, chiamera
+        la funzione `resize` passando la nuova dimensione della label master
+        come argomento.
+        Cio' significa che qualsiasi classe che estende `Adapt` deve implementare
+        una funzione `resize` che
+        gestisce il ridimensionamento del widget `self`
+        """
+        # Estra la nuova dimensione del widget master
+        new_size: tuple[int, int] = (event.width, event.height)
+
+        # Per ogni figlio:
+        for child in self._childs:
+
+            child.resize(new_size)
+
+    def __whole_screen_resize__(self, ci: CanvasImage, size: tuple[int, int]) -> Image:
         """
         Ridimensiona il widget.
 
@@ -191,27 +222,15 @@ class AdaptCanvas(AdaptCanvasABC):
 
         Returns
         ------------
-        photo_image : `PhotoImage`
+        new_image : `Image`
             ritorna l'immagine ridimensionata presente nel widget.
         """
+        print(f"AdaptCanvas RESIZE of {ci}")
         # Prendo una copia dell'immagine e la ridimensiono
         # in base alla nuova dimensione `size` passata alla funzione.
-        new_image: Image = self._image.resize(size, Resampling.LANCZOS)
+        new_image = ci.image().resize(size, Resampling.LANCZOS)
+        new_pi = ImageTk.PhotoImage(new_image)
+        ci.set_current_pi(new_pi)
+        self.itemconfig(ci.id(), image=ci.current_pi())
 
-        # Imposta la nuova immagine
-        self._set_image(new_image)
-        
 
-    # @override
-    def _set_image(self, new_image: Image):
-        # Imposto la nuova immagine
-        self._image = new_image
-
-        # Creo la nuova PhotoImage dalla nuova immagine
-        new_photo_image: PhotoImage = ImageTk.PhotoImage(new_image)
-
-        # Imposto la nuova PhotoImage
-        self._photo_image = new_photo_image
-
-        # Imposto la PhotoImage come nuova immagine del canvas
-        self.itemconfig(self._background_id, image=self._photo_image)

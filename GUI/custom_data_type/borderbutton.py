@@ -21,7 +21,7 @@ class BorderButtonABC(ABC, tk.Button):
 
     La classe implementa gli eventi `<Enter>` e `<Leave>` configurabili
     dai metodi `btn_bd_on_leave`, `btn_bd_on_enter`, 
-    `btn_bg_on_leave`, `btn_bg_on_enter`, `on_enter` e infine, `on_leave`
+    `btn_bg_on_leave`, `btn_bg_on_enter`, `on_enter` ed infine, `on_leave`
     """
 
     # Frame attributes
