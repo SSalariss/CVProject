@@ -59,6 +59,7 @@ class Controller:
         
 
     def __init_loading_menu__(self):
+        """ Inizializza il menu di caricamento. """
         LoadingMenu(self._main_window)
         
 

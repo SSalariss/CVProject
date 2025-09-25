@@ -1,36 +1,11 @@
 import tkinter as tk
-from playsound import playsound
+
 import winsound
 
-from typing import Optional
-
+from custom_data_type.canvasitem import AdaptCanvasItem
 from custom_data_type.adaptcanvas import AdaptCanvas
 from custom_data_type.borderbutton import BorderButton
-
-class BackgroundCanvas(AdaptCanvas):
-    def __init__(self, master: tk.Widget, image_path: str, thickness: Optional[int] = 0) -> None:
-        """
-        Inizializza la classe
-
-        Inizializza la classe estraendo `Image` e `PhotoImage` dal `path` ed 
-        inizializzando la superclasse `Adapt`.
-
-        Parameters
-        -------------
-        master : `tk.Widget`
-            Label master del widget.
-
-        image_path : `str`
-            Percorso all'immagine background che si vuole inserire.
-
-        thickness : `int` | `None`
-            Imposta lo spessore del bordo del widget.
-        """
-
-        # Inizializza la superclasse
-        super().__init__(master, image_path, thickness)
-
-
+from resize import Resize
 
 class MainMenu():
     """
@@ -42,10 +17,11 @@ class MainMenu():
 
     # Class attributes
     _master: tk.Widget
-    _background: tk.Canvas
+    _background: AdaptCanvas
     _BACKGROUND_PATH: str = "resources\\menus\\main_menu\\background.png"
 
     def __init__(self, master):
+        """ Inizializza il menu """
         self._master = master
         self.__init_background__()
         self.__init_music__()
@@ -58,9 +34,17 @@ class MainMenu():
 
         Crea e configura il background del menu.
         """
-        self._background = BackgroundCanvas(self._master, self._BACKGROUND_PATH)
+        # Creo il background
+        self._background = AdaptCanvas(self._master)
+
+        # Creo l'immagine con una funzione
+        # di resize che occupa l'intero schermo
+        self._background.add_image(self._BACKGROUND_PATH, resize_func=self.__background_resize__)
+        
+        # Inserisco il background nel finestra root.
         self._background.pack(fill="both", expand=True)
 
+        # Configuro il background a griglia
         self._background.columnconfigure(0, weight=5)
         self._background.columnconfigure(1, weight=1)
         self._background.columnconfigure(2, weight=5)
@@ -70,7 +54,7 @@ class MainMenu():
 
     def __init_buttons__(self):
         """
-        Inizializza i pulsanti.
+        Inizializza i pulsanti del menu.
 
         Crea e configura i pulsanti del menu.
         """
@@ -88,4 +72,20 @@ class MainMenu():
 
 
     def __init_music__(self):
+        """ Inizializza la musica di sottofondo del menu. """
         winsound.PlaySound("resources\\sounds\\menu\\music.wav", winsound.SND_LOOP | winsound.SND_ASYNC)
+
+
+    def __background_resize__(self, aci: AdaptCanvasItem, size: tuple[int, int]) -> None:
+        """
+        Funzione di resize per `AdaptCanvasItem`
+
+        La funzione ridimensiona l'`AdaptCanvasItem` affinche'
+        occupi tutto il widget master.
+
+        Vedi anche `custom_data_tyes.canvasitem.AdaptCanvasItem`
+        """
+        # Prendo una copia dell'immagine e la ridimensiono
+        # in base alla nuova dimensione `size` passata alla funzione.
+        Resize.resize(aci, size)
+        self._background.itemconfig(aci.id(), image=aci.current_pi())

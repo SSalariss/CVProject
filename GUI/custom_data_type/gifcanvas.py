@@ -1,52 +1,72 @@
 # tkinter
 import tkinter as tk
-from tkinter import PhotoImage
 
-from PIL import Image as ImageFactory, ImageTk, ImageSequence
-from PIL.Image import Image, Resampling
+# PIL
+from PIL import ImageTk
+from PIL.Image import Resampling
 
 # ABC
 from abc import ABC
 from abc import abstractmethod
 
 # Typing
-from typing import Optional
+from typing import Optional, Callable, Literal
 
 # Custom classes
-from custom_data_type.adaptcanvas import AdaptCanvas, CanvasImage
+from custom_data_type.adaptcanvas import AdaptCanvas
+from custom_data_type.canvasitem import AdaptCanvasItem, AdaptCanvasGIF
+from resize import Resize
+
+
+
 
 class GifCanvasABC(AdaptCanvas, ABC):
     """
-    Canvas contenente una GIF.
-
-    Questa classe si divide in due parti:
-    - Estende `AdaptCanvas` e quindi ha un'immagine
-        che si ridimensione automaticamente ogni qual volta viene
-        invocato l'evento `<Configure>`
-    - Contiene al suo interno un `AdaptCanvas` che, invece di una
-        semplice immagine, contiene una GIF gestita internamente
-        da questa classe.
-    Essa quindi non e' altro che un `AdaptCanvas` ma che contieen al suo interno
-    un ulteriore `AdaptCanvas` che viene gestito cone delle GIF.
+    Questa classe astratta rappresenta un `AdaptCanvas` ma con
+    gestione delle GIF.
     """
 
-    # GIF Attributes
-    _gif: CanvasImage
-
-    # Animation attributes
-    _frame_list: list[Image]
-    _counter: int
-
-    def __init__(self, master: tk.Widget, image_path: str, gif_path: str, thickness: Optional[int] = 0) -> None:
+    def __init__(self, master: tk.Widget, thickness: Optional[int] = 0) -> None:
         # Supercostruttore
-        super().__init__(master, image_path, thickness)
-        
-        # init
-        self.__init_gif__(gif_path)
-        self.__init_frame_list__()
-        self.__animate__()
+        super().__init__(master, thickness)
 
-    def __init_gif__(self, gif_path):
+    def add_gif(self, gif_path: str,
+                *,
+                resize_func: Callable[[AdaptCanvasItem, tuple[int,int]], None],
+                pos_x: Optional[int] = 0,
+                pos_y: Optional[int] = 0,
+                anchor: Optional[Literal['nw', 'n', 'ne', 'w', 'center', 'e', 'sw', 's', 'se']] = "nw",
+                wait_time: Optional[int] = 40):
+        """
+        Aggiungi una GIF al Canvas.
+
+        La funzione inizializza e configura, in base ai parametri passati,
+        un `AdaptCanvasGIF` contenente una GIF.
+
+        Parameters
+        ------------
+        image_path: `str`
+            percorso dell'immagine
+
+        resize_func: `Callable[[AdaptCanvasItem, Tuple[int, int]], None]`
+            funzione che gestisce il `resize` del widget che si sta creando.
+            La dichiarazione della funzione e' obbligatoria in quanto, ogni
+            child di questa classe, deve implementare il ridimensionamento.
+
+        pos_x: `int` | `None`
+            coordinata x in cui deve essere posizionato l'`AdaptCanvasGIF`
+            alla sua creazione (default=0)
+
+        pos_y: `int` | `None`
+            coordinata y in cui deve essere posizionato l'`AdaptCanvasGIF`
+            alla sua creazione (default=0)
+
+        anchor: `Literal['nw', 'ne','center', 'sw', 'se']` | `None`
+            a quale angolo e' associata la coordinata
+
+        wait_time: `int` | `None`
+            tempo di attesa tra un frame e l'altro. (default=0)
+        """
         # Apro l'immagine puntata dal path
         gif_image = self.__open_image__(gif_path)
 
@@ -54,109 +74,63 @@ class GifCanvasABC(AdaptCanvas, ABC):
         gif_pi = ImageTk.PhotoImage(gif_image)
 
         # Ottengo l'id della GIF
-        gif_id = self.create_image(0, 0, image=gif_pi, anchor="se")
+        gif_id = self.create_image(pos_x, pos_y, image=gif_pi, anchor=anchor)
 
-        # Creo un CanvasImage con le informazioni della GIF
-        self._gif = CanvasImage(gif_path, gif_image, gif_pi, gif_id, self.__gif_resize__)
-        self._childs.append(self._gif)
+        # Creo un AdaptCanvasItem con le informazioni della GIF
+        gif_child = AdaptCanvasGIF(gif_path, gif_image, gif_pi, gif_id, resize_func)
 
-    def __init_frame_list__(self):
-        self._counter = 0
-        self._frame_list = list()
-        #self._frame_list = list(frame.copy() for frame in ImageSequence.Iterator(self._gif.image()))
-        self.__load_frames__(self._gif.path())
+        # Lo aggiungo come figlio al Canvas
+        self.__add_child__(gif_child)
 
-    def __load_frames__(self, path: str) -> list[Image]:
-        with ImageFactory.open(path) as im:
-            for frame in ImageSequence.Iterator(im):
-                # Converti sempre in RGBA (così la trasparenza è rispettata)
-                f = frame.convert("RGBA")
-                
-                # Crea un canvas trasparente grande quanto l'immagine
-                new_frame = ImageFactory.new("RGBA", im.size, (0, 0, 0, 0))
-                
-                # Incolla sopra il frame (rispettando il canale alpha)
-                new_frame.paste(f, (0, 0), f)
-                
-                self._frame_list.append(new_frame)
+        # Inizio l'animazione della GIF
+        self.__animate__(gif_child, wait_time)
 
     @abstractmethod
-    def __next_frame__(self): ...
-
-    @abstractmethod
-    def __animate__(self): ...
-
-    @abstractmethod
-    def __gif_resize__(self, ci: CanvasImage, size: tuple[int, int]): ...
+    def __animate__(self, acg: AdaptCanvasGIF, wait_time: int): ...
 
 
 class GifCanvas(GifCanvasABC):
 
-    def __init__(self, master: tk.Widget, image_path: str, gif_path: str, thickness: Optional[int] = 0):
-        super().__init__(master, image_path, gif_path, thickness)
+    """ 
+    Questa classe implementa tutte le funzioni richieste
+    dalla superclasse `GifCanvasABC` per la gestione di GIF.
+    """
+
+    def __init__(self, master: tk.Widget, thickness: Optional[int] = 0):
+        """ 
+        Inizializza la calsse. 
+
+        Per informazioni sui parametri vedi `AdaptCanvas`        
+        """
+        # Inizializza il supercostruttore
+        super().__init__(master, thickness)
+
+    # @overload from GifCanvasABC
+    def __animate__(self, acg: AdaptCanvasGIF, wait_time: int):
+        """ 
+        Inizia l'animazione della GIF.
         
-    
-    # @overload from AdaptCanvas
-    def __gif_resize__(self, ci: CanvasImage, size: tuple[int, int]):
-        # Estraggo le dimensioni x ed y
-        # del widget master.
-        x, y = size
-
-        # Proporzioni
-        X_PROP = 0.125
-        Y_PROP = 0.25
-
-        # Margine in base al valore
-        # attuale di x
-        MARGIN = x / 20
-
-        # Calcolo le nuove dimensioni della GIF.
-        new_size = (int(x * X_PROP), int(y * Y_PROP))
-        
-        # Ottengo una copia dell'immagine
-        # della GIF ridimensionata
-        new_gif: Image = self._frame_list[self._counter].resize(new_size, Resampling.LANCZOS)
-
-        # Converto l'immagine ridimensionata in PhotoImage
-        # ed aggiorno l'attributo di classe
-        new_pi = ImageTk.PhotoImage(new_gif)
-        ci.set_current_pi(new_pi)
-        
-        # Aggiorno l'immagine della GIF 
-        self.itemconfig(ci.id(), image=ci.current_pi())
-
-        # Aggiorno le coordinate della GIF
-        self.coords(ci.id(), x-MARGIN, y)
-        
-
-    # @overload
-    def __next_frame__(self):
-        frame = self._frame_list[self._counter]
-        self._counter = (self._counter + 1) % len(self._frame_list)
-        return frame
-
-    # @overload
-    def __animate__(self):
+        Inizia e gestisce l'animazione della GIF
+        ed eventuali ridimensionamenti.
+        """
         # Ottengo il prossimo frame
-        next_frame = self.__next_frame__()
+        next_frame = acg.next_frame()
         
         # Estraggo la dimensione attuale della GIF
-        size = (self._gif.current_pi().width(), self._gif.current_pi().height())
+        size = (acg.current_pi().width(), acg.current_pi().height())
 
         # Eseguo un resize in quanto next_frame ritorna
         # soltanto l'immagine originale, dunque bisogna
         # eseguire un resize in caso l'immagine
         # fosse di dimensioni diverse.
-        next_frame = next_frame.resize(size, Resampling.LANCZOS)
-
-        new_pi = ImageTk.PhotoImage(next_frame)
-
-        self._gif.set_current_pi(new_pi)
+        # Ricordiamo che la funzione salva tutto nel
+        # AdaptCanvas passato.
+        Resize.resize_image(next_frame, acg, size)
 
         # Aggiorno l'immagine attuale
-        self.itemconfig(self._gif.id(), image=self._gif.current_pi())
+        self.itemconfig(acg.id(), image=acg.current_pi())
 
         # Configuro il timer
-        self.after(40, self.__animate__)
+        self.after(wait_time, lambda: self.__animate__(acg, wait_time))
     
         

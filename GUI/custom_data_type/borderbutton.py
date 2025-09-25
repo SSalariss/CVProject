@@ -21,7 +21,11 @@ class BorderButtonABC(ABC, tk.Button):
 
     La classe implementa gli eventi `<Enter>` e `<Leave>` configurabili
     dai metodi `btn_bd_on_leave`, `btn_bd_on_enter`, 
-    `btn_bg_on_leave`, `btn_bg_on_enter`, `on_enter` ed infine, `on_leave`
+    `btn_bg_on_leave`, `btn_bg_on_enter`, `on_enter` ed infine, `on_leave`.
+
+    Nota: la classe non e' un `AdaptCanvasItem`, in quanto si puo' utilizzare
+    la funzione `grid` presente in ogni `tk.Widget` che si occupa del ridimensionamento
+    in modo automatico.
     """
 
     # Frame attributes
@@ -36,7 +40,7 @@ class BorderButtonABC(ABC, tk.Button):
     _border_color_on_enter: str
     _border_color_on_leave: str
 
-    def __init__(self, master=None, bd_width: Optional[int] = 1, bd_color: Optional[str] = "#FFFFFF", cnf={}, **kw) -> None:
+    def __init__(self, master: tk.Widget=None, bd_width: Optional[int] = 1, bd_color: Optional[str] = "#FFFFFF", cnf={}, **kw) -> None:
         """
         Inizializza la classe
 
@@ -141,18 +145,18 @@ class BorderButtonABC(ABC, tk.Button):
     
     
 
-
 class BorderButton(BorderButtonABC):
     """
     Classe specifica di un `BorderButton`
 
-    Questa classe
+    Questa classe rappresenta i pulsanti presenti nel progetto.
     """
     
     # On click events
     _on_click_events: set[str]
 
-    def __init__(self, master=None, bd_width: Optional[int] = 1, bd_color: Optional[str] = "#FFFFFF", cnf={}, **kw) -> None:
+    def __init__(self, master: tk.Widget = None, bd_width: Optional[int] = 1, bd_color: Optional[str] = "#FFFFFF", cnf={}, **kw) -> None:
+        """ Inizializza la classe. """
         # Supercostruttore
         super().__init__(master, bd_width, bd_color, cnf, **kw)
 
@@ -199,7 +203,9 @@ class BorderButton(BorderButtonABC):
         Solleva tutti gli eventi virtuali associati
         al pulsante.
         """
+        # Per ogni evento virtuale salvato:
         for event in self._on_click_events:
+           # Genera quell'evento
            self.event_generate(event)
 
 
@@ -221,7 +227,10 @@ class BorderButton(BorderButtonABC):
         File
             Il file scelto dall'utente
         """
+        # Unisci tutti i tipi passati in una stringa
         types = " ".join(valid_types)
+
+        # Apri il filedialog
         file = filedialog.askopenfile(initialdir="", title="Select an image", filetypes=[(name, types)])
         return file
 
