@@ -6,6 +6,7 @@ from custom_data_type.gifcanvas import GifCanvas
 from custom_data_type.canvasitem import AdaptCanvasItem, AdaptCanvasGIF
 from resize import Resize
 
+
 class LoadingMenu:
     """ 
     Classe per la gestione del Menu di caricamento.
@@ -28,7 +29,7 @@ class LoadingMenu:
         self.__init_background__(master)
 
         # Creo un immagine di background
-        self._background.add_image(self._BACKGROUND_PATH, resize_func=self.__background_resize__)
+        self._background.add_image(self._BACKGROUND_PATH, resize_func=Resize.resize)
 
         # Creo una GIF
         self._background.add_gif(self._GIF_PATH, resize_func=self.__gif_resize__, anchor="se")
@@ -41,14 +42,6 @@ class LoadingMenu:
         """ Inizializza il background. """
         # Inizializzo un GIFCanvas
         self._background = GifCanvas(master)
-
-    def __background_resize__(self, aci: AdaptCanvasItem, size: tuple[int, int]) -> None:
-        """ Ridimensiona il background """
-        # Chiama la funzione di resize
-        Resize.resize(aci, size)
-
-        # Aggiorna il l'item 
-        self._background.itemconfig(aci.id(), image=aci.current_pi())
         
     # ! Funzione non generica:
     # ! funziona soltanto con la GIF del loading
@@ -76,9 +69,6 @@ class LoadingMenu:
         # della GIF ridimensionata
         current_image: Image = acg.current_frame()
         Resize.resize_image(current_image, acg, new_size)
-        
-        # Aggiorno l'immagine della GIF 
-        self._background.itemconfig(acg.id(), image=acg.current_pi())
 
         # Aggiorno le coordinate della GIF
         self._background.coords(acg.id(), x-MARGIN, y)

@@ -41,3 +41,6 @@ class Resize:
 
         # La imposto PhotoImage corrente.
         aci.set_current_pi(new_pi)
+
+        # Aggiorno l'item
+        aci.master().itemconfig(aci.id(), image=aci.current_pi())

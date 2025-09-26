@@ -104,7 +104,7 @@ class AdaptCanvasABC(tk.Canvas, ABC):
         id = self.create_image(pos_x, pos_y, image=photo_image, anchor=anchor)
 
         # Creo un nuovo oggetto AdaptCanvasItem
-        new_child = AdaptCanvasItem(image_path, image, photo_image, id, resize_func)
+        new_child = AdaptCanvasItem(self, image_path, image, photo_image, id, resize_func)
 
         # Lo aggiungo tra i figli del Canvas.
         self.__add_child__(new_child)

@@ -1,5 +1,7 @@
 # tkinter
+import tkinter as tk
 from tkinter import PhotoImage
+
 
 # PIL
 from PIL import Image as ImageFactory, ImageSequence
@@ -20,13 +22,14 @@ class CanvasItem():
     utili per la gestione di immagini contenute in un canvas.
     """
     # Canvas attributes
+    _master: tk.Canvas
     _path: str
     _image: Image
     _current_pi: PhotoImage
     _id: int
 
 
-    def __init__(self, path: str, image: Image, current_pi: PhotoImage, id: int) -> None:
+    def __init__(self, master: tk.Canvas, path: str, image: Image, current_pi: PhotoImage, id: int) -> None:
         """
         Inizializza un `CanvasItem`
 
@@ -47,6 +50,7 @@ class CanvasItem():
         """
         # Inizializzo i vari attributi
         self._path = path
+        self._master = master
         self._image = image
         self.set_current_pi(current_pi)
         self._id = id
@@ -71,6 +75,9 @@ class CanvasItem():
     def set_current_pi(self, pi: PhotoImage):
         """ Imposta la nuova `PhotoImage` """
         self._current_pi = pi
+
+    def master(self) -> tk.Canvas:
+        return self._master
     
     def __repr__(self):
         """ Stringa rappresentate l'oggetto """
@@ -87,7 +94,7 @@ class AdaptCanvasItem(CanvasItem):
     """
     _resize_func: Callable[[tuple[int, int]], Image]
 
-    def __init__(self, path: str, image: Image, current_pi: PhotoImage, id: int, resize_func: Callable[[Self, tuple[int, int]], None]):
+    def __init__(self, master: tk.Canvas, path: str, image: Image, current_pi: PhotoImage, id: int, resize_func: Callable[[Self, tuple[int, int]], None]):
         """
         Inizializza un `AdaptCanvasItem`
 
@@ -114,7 +121,7 @@ class AdaptCanvasItem(CanvasItem):
             di `resize` in base al suo utilizzo e scopo.
             """
         # Inizializzo la superclasse
-        super().__init__(path, image, current_pi, id)
+        super().__init__(master, path, image, current_pi, id)
 
         # Configuro  la funzione di resize
         self._resize_func = resize_func

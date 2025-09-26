@@ -127,9 +127,6 @@ class GifCanvas(GifCanvasABC):
         # AdaptCanvas passato.
         Resize.resize_image(next_frame, acg, size)
 
-        # Aggiorno l'immagine attuale
-        self.itemconfig(acg.id(), image=acg.current_pi())
-
         # Configuro il timer
         self.after(wait_time, lambda: self.__animate__(acg, wait_time))
     

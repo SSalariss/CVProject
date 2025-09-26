@@ -4,15 +4,30 @@ from tkinter import filedialog
 
 # ABC
 from abc import ABC
+from abc import abstractmethod
 
 # typing
-from typing import Optional
+from typing import Optional, IO, Any
 
 # playsound
 from playsound import playsound
 
 
-class BorderButtonABC(ABC, tk.Button):
+class FileChooser(ABC):
+    """ 
+    Classe di supporto cui scopo e' quello di assicurarsi che, 
+    il widget che la estende, implementi i metodi `file` e `__choose_file__` 
+    allo scopo di scegliere ed ottenere il file scelto dall'utente.
+    """
+
+    @abstractmethod
+    def file(self) -> IO[Any] | None: ...
+
+    @abstractmethod
+    def __choose_file__(self) -> None: ...
+
+
+class BorderButtonABC(tk.Button, ABC):
     """
     Classe astratta per la gestione di `tk.Button` con bordo
 
@@ -72,7 +87,7 @@ class BorderButtonABC(ABC, tk.Button):
         # Obbligo la grandezza del bordo del pulsante a 0
         # e la funzione associata a `command`
         kw["borderwidth"] = kw.get("borderwidth", 0)
-        kw["command"] = kw.get("command", self._on_click)
+        kw["command"] = kw.get("command", self.__on_click__)
 
         # Supercostruttore
         super().__init__(self._outline, cnf, **kw)
@@ -155,6 +170,9 @@ class BorderButton(BorderButtonABC):
     # On click events
     _on_click_events: set[str]
 
+    # Last choosen file
+    _file: IO[Any] | None
+
     def __init__(self, master: tk.Widget = None, bd_width: Optional[int] = 1, bd_color: Optional[str] = "#FFFFFF", cnf={}, **kw) -> None:
         """ Inizializza la classe. """
         # Supercostruttore
@@ -162,6 +180,7 @@ class BorderButton(BorderButtonABC):
 
         # Set per la gestione di eventi
         self._on_click_events = set()
+        self._file = None
     
     
     def add_event_on_click(self, virtual_event: str):
@@ -171,7 +190,14 @@ class BorderButton(BorderButtonABC):
         """
         self._on_click_events.add(virtual_event)
 
-    def _on_click(self):
+
+    def __click_sound__(self):
+        """ Riproduce il suono di un click. """
+        # Riproduco il suono associato al pulsante.
+        playsound("resources\\sounds\\effects\\mouse_click_effect.wav", False)
+
+
+    def __on_click__(self):
         """
         Viene chiamata al click del pulsante.
         
@@ -183,15 +209,8 @@ class BorderButton(BorderButtonABC):
         evento virtuale in quanto non si e' raggiunta al soddisfacibilita'
         durante la sua chiamata al metodo.
         """
-        # Riproduco il suono associato al pulsante.
-        playsound("resources\\sounds\\effects\\mouse_click_effect.wav", False)
-
-        # Ottengo il file scelto dall'utente (solo immagini consentite).
-        file = self.__choose_file__("Images", (".png", ".jpeg", ".jpg"))
-
-        # Se non abbiamo alcun file allora
-        # l'utente ha annullato la scelta: return
-        if not file: return
+        # Riproduco il suono di un click
+        self.__click_sound__()
         
         # Altrimenti siamo arrivati ad uno stato
         # interno stabile: solleva gli eventi virtuali
@@ -209,6 +228,32 @@ class BorderButton(BorderButtonABC):
            self.event_generate(event)
 
 
+
+class BorderButtonFileChooser(BorderButton, FileChooser):
+    """
+    Estensione della classe `BorderButton`,
+    il click sul pulsante causera' l'apertura di un filedialog.
+    """
+
+    
+    def __on_click__(self):
+
+        self.__click_sound__()
+        # Ottengo il file scelto dall'utente (solo immagini consentite).
+        file = self.__choose_file__("Images", (".png", ".jpeg", ".jpg"))
+
+        # Aggiorno l'ultimo file scelto.
+        self._file = file
+
+        # Se non abbiamo alcun file allora
+        # l'utente ha annullato la scelta: return
+        if not file: return
+
+        self.__raise_virtual_events__()
+
+
+
+    # @overload from FileChooser
     def __choose_file__(self, name: Optional[str] = "any", valid_types: Optional[set[str]] = "*.*"):
         """
         Apre un filedialog che permette la scelta
@@ -231,7 +276,12 @@ class BorderButton(BorderButtonABC):
         types = " ".join(valid_types)
 
         # Apri il filedialog
-        file = filedialog.askopenfile(initialdir="", title="Select an image", filetypes=[(name, types)])
+        file = filedialog.askopenfile(mode="rb", initialdir="", title="Select an image", filetypes=[(name, types)])
         return file
+    
+    # @overload from FileChooser
+    def file(self) -> IO[Any] | None:
+        """ Ritorna l'ultimo file scelto dall'utente, se esiste. """
+        return self._file
 
 
