@@ -5,11 +5,9 @@ from menus.loading import LoadingMenu
 from menus.choosing import ChoosingMenu
 from menus.final import FinalMenu
 
-from signals import Signals
+from utils.signals import Signals
 
 from custom_data_type.borderbutton import FileChooser
-
-from time import sleep
 
 from threading import Thread
 

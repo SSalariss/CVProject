@@ -4,7 +4,7 @@ from PIL.Image import Image
 
 from custom_data_type.gifcanvas import GifCanvas
 from custom_data_type.canvasitem import AdaptCanvasItem, AdaptCanvasGIF
-from resize import Resize
+from utils.resize import Resize
 
 
 class LoadingMenu:

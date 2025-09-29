@@ -1,9 +1,9 @@
 import tkinter as tk
 
-from resize import Resize
 from custom_data_type.adaptcanvas import AdaptCanvas
 from custom_data_type.borderbutton import BorderButton
-from signals import Signals
+from utils.resize import Resize
+from utils.signals import Signals
 
 
 class FinalMenu():

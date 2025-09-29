@@ -3,8 +3,8 @@ from custom_data_type.adaptcanvas import AdaptCanvas, AdaptCanvasItem
 from custom_data_type.borderbutton import BorderButton
 
 from typing import IO, Any
-from resize import Resize
-from signals import Signals
+from utils.resize import Resize
+from utils.signals import Signals
 
 
 class ChoosingMenu():
