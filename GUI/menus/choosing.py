@@ -4,9 +4,7 @@ from custom_data_type.borderbutton import BorderButton
 
 from typing import IO, Any
 from resize import Resize
-
-from PIL import ImageTk, Image as ImageFactory
-import io
+from signals import Signals
 
 
 class ChoosingMenu():
@@ -20,6 +18,9 @@ class ChoosingMenu():
     _BACKGROUND_PATH: str = "resources\\menus\\choosing_menu\\background.png"
 
     def __init__(self, master: tk.Widget, file: IO[Any]) -> None:
+        #! IN REALTA' NON MI SERVE IL FILE
+        #! DEL PULSANTE MA IL FILE RISULTATO
+        #! DELLA COMPUTAZIONE!
         self._master = master
         self._file = file
         self.__init_background__()
@@ -61,7 +62,6 @@ class ChoosingMenu():
         frame3.grid(row=3, column=5, sticky="nswe")
         frame4.grid(row=3, column=6, sticky="nswe")
         """
-        print(self._file.__class__)
         
 
         image_frame = tk.Frame(self._background)
@@ -71,14 +71,13 @@ class ChoosingMenu():
         image_canvas.add_image(self._file.name, resize_func=Resize.resize)
         image_canvas.pack(fill="both", expand=True)
 
-
-
         teamA = BorderButton(self._background, 1, "#23AECA", text="Team A", font=("Aerial", 20), cursor="hand2")
         teamA.get_frame().grid(row=3, column=1, columnspan=2, sticky="nswe")
+        teamA.add_event_on_click(Signals.LOADING_MENU_SIG)
 
         teamB = BorderButton(self._background, 1, "#23AECA", text="Team B", font=("Aerial", 20), cursor="hand2")
         teamB.get_frame().grid(row=3, column=4, columnspan=2, sticky="nswe")
-
+        teamB.add_event_on_click(Signals.LOADING_MENU_SIG)
 
 
     def __background_resize__(self, aci: AdaptCanvasItem, size: tuple[int, int]) -> None:
@@ -92,6 +91,5 @@ class ChoosingMenu():
         """
         # Prendo una copia dell'immagine e la ridimensiono
         # in base alla nuova dimensione `size` passata alla funzione.
-        print(aci, size)
         Resize.resize(aci, size)
         aci.master().itemconfig(aci.id(), image=aci.current_pi())

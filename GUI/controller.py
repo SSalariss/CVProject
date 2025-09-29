@@ -3,10 +3,15 @@ import tkinter as tk
 from menus.menu import MainMenu
 from menus.loading import LoadingMenu
 from menus.choosing import ChoosingMenu
+from menus.final import FinalMenu
 
 from signals import Signals
 
 from custom_data_type.borderbutton import FileChooser
+
+from time import sleep
+
+from threading import Thread
 
 class Controller:
     """
@@ -54,7 +59,6 @@ class Controller:
         self._main_window.geometry(WINDOW_START_SIZE)
 
         
-
     def __init_signals_handler__(self):
         """ Inizializza la gestione degli eventi virtuali. """
         
@@ -62,17 +66,15 @@ class Controller:
         self._main_window.bind(Signals.MAIN_MENU_SIG, self.__init_menu__)
         self._main_window.bind(Signals.LOADING_MENU_SIG, self.__init_loading_menu__)
         self._main_window.bind(Signals.CHOOSE_MENU_SIG, self.__init_choosing_menu__)
-        #self._main_window.bind(Signals.FINAL_MENU_SIG, self.__init_final_menu__)
+        self._main_window.bind(Signals.FINAL_MENU_SIG, self.__init_final_menu__)
 
     def __init_menu__(self, _: tk.Event):
         """ Inizializza il menu iniziale. """
         self.__clear__()
-        menu = MainMenu(self._main_window)
+        MainMenu(self._main_window)
         
     
-    def __init_loading_menu__(self, event: tk.Event):
-        """ Inizializza il menu di caricamento. """
-        LoadingMenu(self._main_window)
+
         
 
     def __init_choosing_menu__(self, event: tk.Event):
@@ -110,14 +112,44 @@ class Controller:
         # Libera la finestra root da tutti i widget
         self.__clear__()
 
+        # !Qui ci andrebbe la chiamata alla funzione
+        # !del modello che rileva l'homografia dei
+        # !giocatori.
+        # !file = homography(file)
+
         # Inizializza il menu di scelta.
         ChoosingMenu(self._main_window, file)
 
+    def __init_loading_menu__(self, event: tk.Event):
+        """ Inizializza il menu di caricamento. """
 
-    def __init_final_menu__(self, _: tk.Event):
+        # Estraggo il team in attacco
+        team = event.widget.cget("text")
+
+        self.__clear__()
+        LoadingMenu(self._main_window)
+
+        # Chiamata al modello
+        Thread(target=self.__testing__, args=(team,), daemon=True).start()
+        
+
+
+
+
+    def __testing__(self, team: str):
+        """ SIMULAZIONE CHIAMATA AL MODELLO """
+        for _ in range(50_000):
+            print(_)
+        self._main_window.after(0, lambda: self.__init_final_menu__(None))
+
+
+
+
+    def __init_final_menu__(self, event: tk.Event):
         """ Inizializza il menu finale. """
         self.__clear__()
-        #FinalMenu(self._main_window)
+        FinalMenu(self._main_window)
+
 
 
     def __clear__(self):

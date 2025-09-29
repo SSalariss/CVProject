@@ -25,6 +25,8 @@ class LoadingMenu:
 
     def __init__(self, master: tk.Widget):
         """ Inizializza il Menu di caricamento. """
+        self._master = master
+        
         # Inizializzo il background
         self.__init_background__(master)
 

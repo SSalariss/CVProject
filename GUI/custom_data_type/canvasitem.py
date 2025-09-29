@@ -158,7 +158,7 @@ class AdaptCanvasGIF(AdaptCanvasItem):
     _frame_list: list[Image]
     _counter: int
 
-    def __init__(self, path: str, image: Image, current_pi: PhotoImage, id: int, resize_func: Callable[[Self, tuple[int, int]], None]):
+    def __init__(self, master: tk.Widget, path: str, image: Image, current_pi: PhotoImage, id: int, resize_func: Callable[[Self, tuple[int, int]], None]):
         """
         Inizializza una classe
 
@@ -168,7 +168,7 @@ class AdaptCanvasGIF(AdaptCanvasItem):
         Per info sui parametri vedi `AdaptCanvasItem`
         """
         # Inizializzo il supercostruttore
-        super().__init__(path, image, current_pi, id, resize_func)
+        super().__init__(master, path, image, current_pi, id, resize_func)
         
         # Inizializzo la frame list
         self.__init_frame_list__()

@@ -30,7 +30,8 @@ class GifCanvasABC(AdaptCanvas, ABC):
         # Supercostruttore
         super().__init__(master, thickness)
 
-    def add_gif(self, gif_path: str,
+    def add_gif(self,
+                gif_path: str,
                 *,
                 resize_func: Callable[[AdaptCanvasItem, tuple[int,int]], None],
                 pos_x: Optional[int] = 0,
@@ -77,7 +78,7 @@ class GifCanvasABC(AdaptCanvas, ABC):
         gif_id = self.create_image(pos_x, pos_y, image=gif_pi, anchor=anchor)
 
         # Creo un AdaptCanvasItem con le informazioni della GIF
-        gif_child = AdaptCanvasGIF(gif_path, gif_image, gif_pi, gif_id, resize_func)
+        gif_child = AdaptCanvasGIF(self, gif_path, gif_image, gif_pi, gif_id, resize_func)
 
         # Lo aggiungo come figlio al Canvas
         self.__add_child__(gif_child)
