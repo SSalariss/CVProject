@@ -5,7 +5,7 @@ want_local_pixel_distribution = True
 want_hsv = True
 
 
-img_org = cv2.imread("Esercitazioni\opencv_lessons\data\giocatori.jpeg")
+img_org = cv2.imread("immagini di prova\\test2.png")
 
 
 img = cv2.cvtColor(img_org, cv2.COLOR_BGR2HSV)
@@ -34,9 +34,9 @@ abs_der = cv2.convertScaleAbs(der_tot)
 # ===============================
 # PARAMETRI MODIFICABILI
 # ===============================
-tolleranza = 200                # Valore di soglia per rilevare linee nette (0-255)
+tolleranza = 220                # Valore di soglia per rilevare linee nette (0-255)
 min_line_length = 200           # Lunghezza minima della linea
-max_line_gap = 50              # Massimo gap tra segmenti di linea
+max_line_gap = 20              # Massimo gap tra segmenti di linea
 
 # ===============================
 # CARICAMENTO E PREPARAZIONE IMMAGINE
@@ -67,8 +67,7 @@ res = cv2.resize(img_org, (1200,600), interpolation=cv2.INTER_LINEAR)
 # ===============================
 # MOSTRA RISULTATI
 # ===============================
-cv2.imshow("Linee Rilevate", img_org)
-#cv2.imshow("Bordi", edges)
+cv2.imshow("Linee Rilevate", res)
 cv2.waitKey(0)
 cv2.destroyAllWindows()
 
