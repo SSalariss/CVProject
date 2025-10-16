@@ -10,7 +10,7 @@ from abc import abstractmethod
 from typing import Optional, IO, Any
 
 # playsound
-from playsound import playsound
+from playsound3 import playsound
 
 
 class FileChooser(ABC):
