@@ -146,6 +146,7 @@ class Controller:
 
 
     def __get_prediction__(self, team: str):
+        print(f"clicked team: {team}")
         result_path = self._model.step_offside_detection(team)
         self._main_window.after(2000, lambda: self.__init_final_menu__(None, result_path))
 
